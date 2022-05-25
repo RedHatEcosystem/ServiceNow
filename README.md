@@ -5,6 +5,11 @@ Setup for using Ansible and ServiceNow with bidirectional communication -- for s
 # Installing IntegrationHub to your ServiceNow instance.  
 An administrator with access to the ServiceNow customer service portal will need to install the plugin, IntegrationHub.  There are four levels of IntegrationHub, and only the top two include Ansible Spoke (Enterprise or Professional level).  In the instances section, select "Activate Plugin" and search for the plugin, schedule a time, then submit.
 
+- Starter
+- Standard
+- *Professional*
+- *Enterprise*
+
 <img src="https://raw.githubusercontent.com/RedHatEcosystem/ServiceNow/main/install_inthub.png">
 
 # Installing Ansible Spoke to your ServiceNow instance.  
