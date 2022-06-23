@@ -20,7 +20,7 @@ Setup for using Ansible and ServiceNow with bidirectional communication -- for s
 
 ![Automation Controller](/images/controller-2.png)
 
-4. Enter the following information for the new Application Token: 
+4. Enter the following information for the new Application form: 
 
 | Key                      | Value                                                                                      | Note                               |
 |--------------------------|--------------------------------------------------------------------------------------------|------------------------------------|
@@ -47,9 +47,27 @@ Then click `Save`
 
 
 ## Creating a credential type and credential for Controller -> SNow communication
-TODO: Add screenshots for cred type
 
-Input Configuration:
+1. Log on to Automation Controller
+2. On the left panel under `Administration`, click on `Credential Types`
+
+![Automation Controller](/images/controller-5.png)
+
+3. In the main panel, click on the `Add` Button
+
+![Automation Controller](/images/controller-6.png)
+
+4. Enter the following information for the new Credential Type form:
+
+| Key                      | Value                                                                                      | Note                               |
+|--------------------------|--------------------------------------------------------------------------------------------|------------------------------------|
+| Name                     | ServiceNow                                                                                 |                                    |
+| Description              | Credential type for ServiceNow authentication                                              |                                    |
+
+Make sure that `yaml` is selected for both the `Input Configuration` and `Injector Configuration` sections and enter the following:
+
+
+`Input Configuration`:
 ```yml
 ---
 fields:
@@ -68,8 +86,8 @@ required:
   - password
   - instance
 ```
+`Injector Configuration`:
 
-Injector Configuration:
 ```yml
 ---
 env:
@@ -82,6 +100,37 @@ extra_vars:
   snow_username: '{{ username }}'
 
 ```
+
+Then click `Save`
+
+![Automation Controller](/images/controller-7.png)
+
+
+5. On the left panel under `Resources`, click on `Credentials`
+
+![Automation Controller](/images/controller-8.png)
+
+3. In the main panel, click on the `Add` Button
+
+![Automation Controller](/images/controller-9.png)
+
+4. Enter the following information for the new Credential form:
+
+| Key                      | Value                                                  | Note                                   |
+|--------------------------|--------------------------------------------------------|----------------------------------------|
+| Name                     | ServiceNow Instance <YOUR_INSTANCE_ID>                 |                                        |
+| Description              | Credential for ServiceNow Instance <YOUR_INSTANCE_ID>  |                                        |
+| Service Now Username     | ServiceNow Username                                    |                                        |
+| Service Now Password     | ServiceNow Password                                    |                                        |
+| Service Now Instance     | <YOUR_INSTANCE_ID>                                     | Just the instance ID, not the full URL |
+
+Then click `Save`
+
+![Automation Controller](/images/controller-10.png)
+
+Now you have a crednetial that you can use to automate ServiceNow tasks using the `servicenow.itsm` and `servicenow.servicenow` collections
+
+
 
 # Configuring Your ServiceNow Instance
 
@@ -135,18 +184,237 @@ Then click on the `Create and Get OAuth Token` Button
 
 6. A windows will popup , click on `Authorize` 
 
-TODO: Continue Setup
+![Service Now](/images/snow-5.png)
 
-## Creating A Simple catalog Item
 
-TODO: Add Details
+Ansible Spoke is now configured 
+
 
 ## Creating A Simple Flow
 
-TODO: Add Details
+1. Log on to ServiceNow using your `admin` account
+2. On the left panel type in `Flow` in the `Filter navigator` and Click on `Flow Designer` Under `Process Automation`. The `Flow Designer` will open in a new tab.
 
-## Configuring the Catalog Item to execute the Flow
+![Service Now](/images/snow-1.png)
 
-TODO: Add Details
+3. In the `Flow Designer`, click on the `New` button, then choose `Flow`
 
-## Flow Variable Workaround
+![Service Now](/images/snow-6.png)
+
+4. Enter the following information in the new flow dialog box:
+
+| Key                      | Value                            | Note                                   |
+|--------------------------|----------------------------------|----------------------------------------|
+| Flow n                   | Ansible: Print Greeting Message  |                                        |
+| Application              | Ansible Spoke                    |                                        |
+| Protection               | None                             |                                        |
+| Run As                   | System User                      |                                        |
+
+Then Click on `Submit`
+
+![Service Now](/images/snow-7.png)
+
+5. In the new flow page, click on `Add a Trigger`
+
+![Service Now](/images/snow-8.png)
+
+6. Choose `Service Catalog` Under `Application` and click on `Done`
+
+![Service Now](/images/snow-9.png)
+
+7. In the new flow page, click on `Add an Action, Flow Logic, or Subflow`
+
+![Service Now](/images/snow-10.png)
+
+8. Choose `Action`
+
+![Service Now](/images/snow-11.png)
+
+9. Select `Ansible` under `INSTALLED SPOKES` and then choose `Launch Job Template` under `Template Management`
+
+![Service Now](/images/snow-12.png)
+
+10. Enter the Automation Controller Job Template ID. We are planning on creating a Catalog item later that will capture 2 values and store them in 2 variabl andes named `snow_name_input` and `snow_message_input`. To pass the values of these variables to Automation Controller, click on the script button for the `Extra Arguments` field and input the following:
+
+```
+var extra = "{ \"extra_vars\":{"
+    + "  \"greeting_name_input\": \"" + fd_data.trigger.request_item.variables.snow_name_input.getDisplayValue() + "\","
+    + "  \"greeting_message_input\": \"" + fd_data.trigger.request_item.variables.snow_message_input.getDisplayValue() + "\""
+    + "}}";
+return extra;
+
+```
+
+This will pass 2 extra vars to Automation Controller named `greeting_name_input` and `greeting_message_input` with the values captured from service now.
+
+Click on Done
+
+![Service Now](/images/snow-13.png)
+
+11. Click on `Save`
+
+![Service Now](/images/snow-14.png)
+
+12. Click on `Activate`
+
+![Service Now](/images/snow-15.png)
+
+
+We now have a flow that is triggered through a Service Catalog item, that will launch a specific job template in Automation Controller.
+
+## Creating A Simple catalog Item
+
+### Create a Catalog Item Template
+
+1. Log on to ServiceNow using your `admin` account
+2. On the left panel type in `Catalog Builder` in the `Filter navigator` and Click on `Catalog Builder` Under `Service Catalog`. The `Catalog Builder` will open in a new tab.
+
+![Service Now](/images/snow-16.png)
+
+3. Click on `Create a catalog item template`
+
+![Service Now](/images/snow-17.png)
+
+4. Choose `Standard` and Click on `Continue`
+
+![Service Now](/images/snow-18.png)
+
+5. In the `Template Details` Section, enter the following Info:
+
+| Key                      | Value                            | Note                                   |
+|--------------------------|----------------------------------|----------------------------------------|
+| Template name            | Ansible Request Template         |                                        |
+| Short description        | SNOW to AAP Integration          |                                        |
+| Template Available for   | Any User                         |                                        |
+
+![Service Now](/images/snow-19.png)
+
+6. In the `Overrides` Section, Click on Browse:
+
+![Service Now](/images/snow-20.png)
+
+7. Highlight and move all items from the `Available` section to the Selected section and then click on `Save Selection`:
+
+![Service Now](/images/snow-21.png)
+
+7. In the `Review and Submit` section click on `Submit`:
+
+![Service Now](/images/snow-22.png)
+
+
+### Create a Catalog Item Template
+
+1. Back in the `Catalog Builder`, Click on `create a new catalog item`
+
+![Service Now](/images/snow-23.png)
+
+2. In the `Getting Started` page, click on `Continue`
+
+![Service Now](/images/snow-24.png)
+
+3. Select the template we just created earlier, Choose `Ansible Request Template` and click on `use this item template`
+
+![Service Now](/images/snow-25.png)
+
+4. In the `Details` tab, enter the following information:
+
+| Key                      | Value                            | Note                                   |
+|--------------------------|----------------------------------|----------------------------------------|
+| Template name            | Ansible: Print Greeting Message  |                                        |
+| Short description        | Testing SNOW to AAP Integration  |                                        |
+| Image                    | <Upload_an_image>                | Optional                               |
+| Description              | <Description_text>               | Optional                               |
+
+![Service Now](/images/snow-26.png)
+
+5. In the `Location` tab, Choose `Service Catalog` under `Catalogs` and `Services` under `Categories`:
+
+![Service Now](/images/snow-27.png)
+
+6. In the `Questions` tab, click on `Insert new question`
+
+![Service Now](/images/snow-28.png)
+
+7. Enter the follwing information in the new question details page:
+
+| Key                      | Value                | Note                                   |
+|--------------------------|----------------------|----------------------------------------|
+| Question type            | Text                 |                                        |
+| Question subtype         | Single-line          |                                        |
+| Question label           | Enter your name     |                                        |
+| Name                     | `snow_name_input`    | Variable name we used in the flow      |
+| Mandatory                | Checked              |                                        |
+
+click on `Insert Question`
+
+![Service Now](/images/snow-29.png)
+
+8. In the `Questions` tab, Repeat the process again to add another question. Enter the follwing information in the new question details page:
+
+| Key                      | Value                | Note                                   |
+|--------------------------|----------------------|----------------------------------------|
+| Question type            | Text                 |                                        |
+| Question subtype         | Single-line          |                                        |
+| Question label           | Enter your message   |                                        |
+| Name                     | `snow_message_input` | Variable name we used in the flow      |
+| Mandatory                | Checked              |                                        |
+
+Your `Questions` tab should now look like this
+
+![Service Now](/images/snow-30.png)
+
+9. In the `Settings` tab, choose `Submit` for the button label, and check all available options
+
+![Service Now](/images/snow-31.png)
+
+10. In the `Access` tab, Make sure that `Any User` is selected under `Available for`
+
+![Service Now](/images/snow-32.png)
+
+11. In the `Fulfillment` tab, Choose `Flow Designer flow` under `Process engine`, and choose the flow we created earlier, `Ansible: Print Greeting Message` under `Selected flow`
+
+![Service Now](/images/snow-33.png)
+
+12.  In the `Review and Submit` tab, click on `Submit`
+
+![Service Now](/images/snow-34.png)
+
+We have finished creating a catalog item in the service catalogue
+
+### Testing the Catalog Item
+
+1. On the left panel type in `Service Catalog` in the `Filter navigator` and Click on `Service Catalog` Under `Self-Service`, Then click on `Services` Under  `Service Catalog`.
+
+![Service Now](/images/snow-35.png)
+
+2. You should find an entry for the Catalog item we created named `Ansible: Print Greeting Message`, click on it
+
+![Service Now](/images/snow-36.png)
+
+3. Enter values for the request (`name` and `message`) and click on `Order Now`
+
+![Service Now](/images/snow-37.png)
+
+4. Wait for a confirmation that the request has been submitted, the flow is now running and should trigger a new Job on Automation Controller
+
+![Service Now](/images/snow-38.png)
+
+5. In Controller, you should see the job, and should be able to see the values from the form in the output 
+
+![Service Now](/images/snow-39.png)
+
+The playbook used for this workflow is:
+
+```yaml
+---
+- name: Print a greeting message
+  hosts: all
+  gather_facts: false
+  vars:
+    greeting_name: "{{ greeting_name_input | default('Ansible User') }}"
+    greeting_message: "{{ greeting_message_input | default('Have a great day!') }}"
+  tasks:
+  - name: Print Greeting Message
+    ansible.builtin.debug:
+      msg: "Hello {{ greeting_name }}, {{ greeting_message }}"
+```
