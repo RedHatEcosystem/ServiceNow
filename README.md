@@ -134,6 +134,25 @@ Now you have a crednetial that you can use to automate ServiceNow tasks using th
 
 # Configuring Your ServiceNow Instance
 
+## Installing the required store applications for Automating ServiceNow and the notification service for EDA
+
+1. Log on to ServiceNow using your `admin` account
+2. On the top panel, click on `All` 
+
+![Service Now](/images/snow-40.png)
+
+3. Type in `Company` in the `Filter` field and then choose `My Company Applications` under `System Applications`.
+
+![Service Now](/images/snow-41.png)
+
+4. Click on `Install` next to the application you want to install. 
+
+![Service Now](/images/snow-42.png)
+
+5. The application(s) should then move from the `Not Installed` section and appear under the `Installed` section.
+
+![Service Now](/images/snow-43.png)
+
 ## Installing IntegrationHub to your ServiceNow instance.  
 
 An administrator with access to the ServiceNow customer service portal will need to install the plugin, IntegrationHub.  There are four levels of IntegrationHub from low to high: Starter, Standard, Professional, Enterprise. Only the top two include Ansible Spoke. In the instances section, select "Activate Plugin" and search for the plugin `ServiceNow IntegrationHub Enterprise Pack Installer`, schedule a time, then submit. 
